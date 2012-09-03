@@ -1,0 +1,169 @@
+= Relisp
+
+== Synopsis
+
+Emacs is great.  So is Ruby.  This purpose of this library is to:
+* call Ruby from Emacs
+* call Elisp from Ruby
+* manipulate Emacs without using Elisp to some extent (Ruby wrappers
+  around some Elisp functions and objects)
+* reduce the number of blog entries titled "Is Ruby an acceptable
+  lisp?"
+
+== Install
+
+   [sudo] gem install relisp
+
+Then the library is installed, and you can call elisp from ruby.  But
+if you want to call ruby from emacs (and you do, right?) you need to
+go into the +src+ directory and copy <tt>relisp.el</tt> and/or
+<tt>relisp.elc</tt> to your elisp folder (probably <tt>~/.elisp</tt>
+or <tt>~/.emacs.d/site-lisp</tt>).  Then you might want to add the
+lines
+
+  (autoload 'relisp-start-slave "relisp" nil t)
+  (autoload 'ruby-eval "relisp" nil t)
+
+to your emacs initialization file (<tt>~/.emacs'</tt> or
+<tt>~/.emacs.d/init.el</tt>).
+
+If you don't know where to find the files for this gem, run the
+command <tt>gem env gemdir</tt>.  Or you can download the tarball for
+this gem and get the files there.
+
+== Usage
+
+The stuff below and a lot more is all in the +examples+ directory if
+you want to try running it.
+
+=== Emacs calling Ruby
+
+==== With a generic slave
+
+Start up a ruby process:
+
+  (relisp-start-slave)
+
+Then make calls to ruby with <tt>ruby_eval</tt>:
+  
+  (ruby-eval "1 + 2 + 3") 
+      => 6
+  (ruby-eval "'ruby string'.reverse")
+      => "gnirts ybur"
+  (type-of (ruby-eval "{:name => 'john'}"))	
+      => hash-table
+
+If you need to use the value of an elisp variable,
+<tt>method_missing</tt> will give it to you:
+
+  (setq list '(3 5 2 6 4 1))
+  (ruby-eval "list = symbol_value(:list)")
+  
+  (setq elisp-vector [1 2 3 4 5 6])
+  (ruby-eval "vect = symbol_value(:\"elisp-vector\")")
+  (ruby-eval "vect = self.elisp_vector")
+  ; or even
+  (ruby-eval "vect = elisp_vector")
+
+Note that the data types/classes are correct in both languages.  The
+results are converted--it's not just strings getting passed back and
+forth.
+
+Elisp can ask Ruby to evaluate code which in turn will call elisp:
+
+  (ruby-eval "elisp_eval('(+ 1 2)')")
+  (ruby-eval "elisp_eval('(ruby-eval \"1 + 2\")')")
+
+The state of the slave persists from one call to the next:
+
+  (ruby-eval "a = 5")
+  (ruby-eval "a + 1")
+     => 6
+
+==== Specifying a slave file
+
+The ruby slave file should look something like this:
+
+  require 'relisp'
+
+  slave = Relisp::RubySlave.new
+
+  def sample_ruby_method
+    Relisp::Buffer.new("ruby-created-buffer")
+  end
+
+  slave.start
+
+The call to <tt>slave.start</tt> should probably be the last line of
+the file since it starts an infinite loop.  The elisp code just needs
+to specify the path to the ruby slave when calling
+<tt>relisp-start-slave</tt>:
+
+  (relisp-start-slave "ruby_slave")
+  (ruby-eval "sample_ruby_method")
+
+For debugging and curiousity, all of the messages between emacs and
+ruby are recorded in the buffer <tt>\*Relisp\*</tt>.
+
+=== Ruby calling Emacs
+
+The Emacs process is managed by <tt>Relisp::ElispSlave</tt>.
+
+  require 'relisp'
+  emacs = Relisp::ElispSlave.new
+
+Calls are made calling <tt>elisp_eval</tt> and <tt>elisp_exec</tt>
+on the ElispSlave object.
+
+  emacs.elisp_eval "(+ 1 2)"
+     => 3
+  emacs.elisp_eval '(concat "two " "words")'
+     => "two words"
+  emacs.elisp_eval( "(setq new-var 23)")
+  emacs.elisp_eval( "(+ 1 new-var)")
+     => 24
+  
+The usual <tt>method_missing</tt> magic provides access to elisp
+functions:
+
+  emacs.concat("two", " words")        # (concat "two" "words")
+  emacs.*(5,2)                         # (* 5 2)
+  emacs.create_file_buffer("blah.txt") # (create-file-buffer "blah.txt")
+
+Emacs editing types have proxy classes with extensive functionality:
+
+  buffer =  Relisp::Buffer.new("ruby-created-buffer")
+     => #<Relisp::Buffer:0xb7c4784c>
+  buffer.name
+     => "ruby-created-buffer"
+
+To print debug information showing messages between ruby and emacs,
+use the <tt>ElispSlave#debugging</tt> method:
+
+  emacs.debugging do
+    emacs.elisp_eval "(+ 1 2)"    
+  end 
+
+== Author
+
+Don March <don@ohspite.net>
+
+== Copyright
+
+Copyright (C) 2009, 2010 Don March.
+
+Licensed under the GNU General Public License. 
+
+Relisp is free software: you can redistribute it and/or modify it
+under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+ 
+Relisp is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see
+<http://www.gnu.org/licenses/>.

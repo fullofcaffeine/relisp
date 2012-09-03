@@ -1,0 +1,59 @@
+== 1.1.1 / 2011-01-10
+
+* 1 minor enhancement
+  * Ruby unicode escape sequences fixed to work with emacs.
+
+== 1.1.0 / 2011-01-05
+
+* 2 major enhancements
+  * Multiple ruby slaves can be run from Emacs at once.  
+  * The method_missing stuff now retreives and sets elisp variables in
+    addition to calling functions.
+  * Ruby slaves can call elisp while starting up.
+* minor enhancements
+    * Less temporary variables created in elisp, and those that can be
+    are `makunbound'ed when they can be.
+  * Eval used in fewer places in ruby and elisp.
+  * New and better examples.
+  * Code is DRYer, prettier and sucks less in general.
+
+== 1.0.1 / 2009-09-09
+
+* 1 tiny backwards-incompatible enhancement
+  * 'relisp-start-slave' now takes an optional argument for the path
+    to the ruby script, instead of relying on the variable
+    'relisp-ruby-slave-path'.  That was stupid.
+* 1 minor change
+  * Better instructions for installing elisp component.
+* 2 bug fixes
+  * Relisp::Window#shrink
+  * Relisp::Window#enlarge
+
+== 1.0.0 / 2009-05-05
+
+* Works on Windows
+* Stable!
+* Cinco de Mayo!
+
+== 0.9.2 / 2009-03-09
+
+* 3 minor enhancements
+  * Added a 'ruby-exec' lisp function that executes ruby code taking
+    the time to translate the result.
+  * Improved the 'elisp_exec' ruby function.
+  * Wrote test cases that cover a good chunk of a Relisp::Proxy
+    classes.
+  * Fixed whatever bugs that were found by writing the tests.
+
+== 0.9.1 / 2009-01-28
+
+* 2 major enhancements
+  * Cons are now proxy objects.  If the cons is a list, it can be
+    converted to a Relisp::List, a subclass of Array.
+  * Editing types are now subclasses of a Relisp::Proxy class that
+    takes care of creating the wrapping over the elisp variable.
+
+== 0.9.0 / 2009-01-25
+
+* 1 major enhancement
+  * New! 
